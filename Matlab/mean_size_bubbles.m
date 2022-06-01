@@ -5,7 +5,7 @@
 % delimiter    : what is defining the delimitation in-between cells.
 % startRow     : the row at which the data is, meaning we skip the name of the
 % cells.
-%
+
 % formatSpec   : all of the data we have here is double, and we have 28
 % columns, so we have 28 times '%f'.
 %
@@ -294,23 +294,29 @@ exportgraphics(fig_paircorrelation,strcat(true_name,'/pair_correlation.png'));
 
 %% PCA to get asphericity and orientation vector
 
-vector_asphericity = zeros(size_arrays,3); % will be (x,y,z)
+vector_asphericity  = zeros(size_arrays,3); % will be (x,y,z)
+vector_asphericity2 = zeros(size_arrays,3); % will be (x,y,z)
+asphericity_calculated = zeros(size_arrays,1);
 vector_asphericity_test = zeros(size_arrays,3);
 for i = 1:size_arrays
-    vector_asphericity(i,1) = PCA1_x(i) ;
-    vector_asphericity(i,2) = PCA1_y(i) ;
-    vector_asphericity(i,3) = PCA1_z(i) ;
+    vector_asphericity(i,1)  = PCA1_x(i) ;
+    vector_asphericity(i,2)  = PCA1_y(i) ;
+    vector_asphericity(i,3)  = PCA1_z(i) ;
+    big_axis_norm            = sqrt(PCA1_x(i)^2+PCA1_y(i)^2+PCA1_z(i)^2);
+    sml_axis_norm            = sqrt(PCA3_x(i)^2+PCA3_y(i)^2+PCA3_z(i)^2);
+    vector_asphericity2(i,1) = PCA3_x(i) ;
+    vector_asphericity2(i,2) = PCA3_y(i) ;
+    vector_asphericity2(i,3) = PCA3_z(i) ;
 
-    vector_asphericity_test(i,1) = x_array(i)+PCA1_x(i) ;
-    vector_asphericity_test(i,2) = y_array(i)+PCA1_y(i) ;
-    vector_asphericity_test(i,3) = z_array(i)+PCA1_z(i) ;
+    asphericity_calculated(i) = (big_axis_norm-sml_axis_norm)/(0.5*(big_axis_norm+sml_axis_norm));
 end
 
-direction_asphericity = figure;
+direction_asphericity = figure('visible','off');
 hold on
 for i = 1:size_arrays
     %plot3( [x_array(i), vector_asphericity_test(i,1)], [y_array(i), vector_asphericity_test(i,2)], [z_array(i), vector_asphericity_test(i,3)] )
     quiver3(x_array(i), y_array(i), z_array(i), vector_asphericity(i,1),vector_asphericity(i,2),vector_asphericity(i,3),'Linewidth',2 ,'MaxHeadSize',2)
+    quiver3(x_array(i), y_array(i), z_array(i), vector_asphericity2(i,1),vector_asphericity2(i,2),vector_asphericity2(i,3),'Linewidth',2 ,'MaxHeadSize',2)
 end
 hold off
 xlabel('$x$ position [mm]','Interpreter','Latex');
@@ -319,10 +325,51 @@ zlabel('$z$ position [mm]','Interpreter','Latex');
 
 %% Histogram of z projection of asphericity
 
-histogram_asphericity_z_project = figure;
-hist(PCA1_z,21)
+%histogram_asphericity_z_project = figure;
+%hist(PCA1_z,21)
 
+asphericity_fct_z = figure('visible','off');
+hold on
+plot(z_array,asphericity_calculated,'x','Linewidth',2)
+plot([min(z_array),max(z_array)],[mean(asphericity_calculated),mean(asphericity_calculated)],'Linewidth',2)
+xlabel('Position $z$','Interpreter','latex')
+ylabel('Asphericity(z)','Interpreter','latex')
 
+legend({'asphericity$(z)$','$\langle$asphericity$(z) \rangle$'},'Location','southwest','Interpreter','Latex');
 
+hold off
+exportgraphics(asphericity_fct_z,strcat(true_name,'/asphericity_fct_z.png'));
 
+%%
+%axis_along_z_fct_z = figure;
+%plot(z_array,PCA1_z,'x','LineWidth',2)
+
+%% Voronoi 
+
+whole_test_data = zeros(numel(x_array),3);
+for i = 1:numel(x_array)
+    whole_test_data(i,1) = x_array(i);
+    whole_test_data(i,2) = y_array(i);
+    whole_test_data(i,3) = z_array(i);
+end
+%dt = delaunayTriangulation(whole_test_data);
+[voro_vert,c] = voronoin(whole_test_data); % Voronoi cells c of the Voronoi diagram
+vx = zeros(numel(voro_vert)/3,1); 
+vy = zeros(numel(voro_vert)/3,1);
+vz = zeros(numel(voro_vert)/3,1);
+for i = 1:numel(voro_vert)/3
+    vx(i) = voro_vert(i,1);
+    vy(i) = voro_vert(i,2);
+    vz(i) = voro_vert(i,3);
+end
+%{
+figggg = figure;
+plot3(x_array,y_array,z_array,'r+',vx,vy,vz,'b-');
+xlim([min(x_array), max(x_array)]);
+ylim([min(y_array), max(y_array)]);
+zlim([min(z_array), max(z_array)]);
+%}
+
+disp('The mean number of neighbours is');
+disp(2*(numel(voro_vert)/3)/size_arrays);
 
