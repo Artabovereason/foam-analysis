@@ -23,7 +23,8 @@
 more off
 clear
 directory='';
-load([directory,'Nodes_and_Struts_cleaned_15.mat'])
+%load([directory,'Nodes_and_Struts_cleaned_15.mat'])
+load([directory,'Nodes_and_Struts.mat'])
 %matfile([directory,'Nodes_and_Struts_cleaned_15.mat']) <- content of mat file.
 
 %%% pretraitement des struts
@@ -134,4 +135,9 @@ subplot(2,1,2)
 plotyy(zmv,density109_alongz(:,1)./max(1,densityv_alongz)/les109degres,zmv,density109_alongz(:,2)./max(1,densityv_alongz))
 title('local mean dihedral angle and standard deviation')
 xlabel('z');
+
+
+
+
+
 

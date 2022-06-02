@@ -34,8 +34,12 @@ startRow   = 2;
 formatSpec = '%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%[^\n\r]';
 dataArray  = textscan(fileID,formatSpec, 'Delimiter', delimiter, 'TextType', 'string', 'EmptyValue', NaN, 'HeaderLines' ,startRow-1, 'ReturnOnError', false,'EndOfLine', '\r\n');
 fclose(fileID);
+
+
+
 size_arrays  = size(dataArray{1,1});
 size_arrays  = size_arrays(1);
+
 
 x_array      = dataArray{1,1} ;
 y_array      = dataArray{1,2} ;
@@ -65,11 +69,14 @@ disp('Standard deviation volume :');
 disp(std_volume);
 
 %% 3D plot of the center of the cells 
+
+%{
 plot3(x_array,y_array,z_array,'o');
 xlabel('$x$ position [mm]','Interpreter','Latex');
 ylabel('$y$ position [mm]','Interpreter','Latex');
 zlabel('$z$ position [mm]','Interpreter','Latex');
 title('3D plot of cell''s centers','Interpreter','latex')
+%}
 
 %% Plot of the volume as a function of the z position
 
@@ -127,6 +134,7 @@ end
 
 %% Plot
 
+
 fig1 = figure('visible','off');
 error_bar_mean = [] ;
 for l = 1:numel(plot_slice_z)
@@ -137,7 +145,7 @@ errorbar(plot_slice_z,mean_volume_z,error_bar_mean,'horizontal','.','LineWidth',
 
 hold on 
 plot([min(bin_slice_z),max(bin_slice_z)],[mean(volume_array) , mean(volume_array)]  , 'LineWidth',2)
-plot([min(bin_slice_z),max(bin_slice_z)],[mean(mean_volume_z), mean(mean_volume_z)] , 'LineWidth',2)
+plot([min(bin_slice_z),max(bin_slice_z)],[mean_mean_volume_z , mean_mean_volume_z] ,'--', 'LineWidth',2)
 legend({'$\langle V\rangle(z)$','$\langle \langle V\rangle(z)\rangle$ ','$\langle V\rangle$'},'Location','southwest','Interpreter','Latex');
 hold off
 xlim([min(bin_slice_z),max(bin_slice_z)])
@@ -180,8 +188,8 @@ plot([min(bin_slice_z),max(bin_slice_z)],[mean(volume_array) , mean(volume_array
 %plot([min(bin_slice_z),max(bin_slice_z)],[mean(mean_volume_z), mean(mean_volume_z)] , 'LineWidth',1)
 plot([min(bin_slice_z),max(bin_slice_z)],[mean_mean_volume_z , mean_mean_volume_z] ,'--', 'LineWidth',1)
 
-errorbar(plot_slice_z,mean_volume_z,error_bar_mean,'horizontal','.','LineWidth',1,'Color','black')
-legend({'$\langle \langle V\rangle(z)\rangle$ ','$\langle V\rangle$','$\langle V\rangle(z)$'},'Location','southwest','Interpreter','Latex');
+errorbar(plot_slice_z,mean_volume_z,std_volume_z,std_volume_z,error_bar_mean,error_bar_mean,'.','LineWidth',1,'Color','black')
+legend({'$\langle \langle V\rangle(z)\rangle$ ','$\langle V\rangle$','$\langle V\rangle(z)$'},'Location','northwest','Interpreter','Latex');
 xlim([min(bin_slice_z),max(bin_slice_z)])
 xlabel('$z$ position [mm]','Interpreter','Latex');
 hold off
@@ -285,11 +293,14 @@ end
  
 fig_paircorrelation = figure('visible','off');
 hold on
-plot(slice_list,pair_function,'LineWidth',2)
+plot(slice_list,pair_function,'x-','LineWidth',2)
 %plot(slice_list,counted)
 hold off
 ylabel('Pair correlation function $g(r)$','Interpreter','latex')
 xlabel('Distance $r$ from an other site [mm]','Interpreter','latex')
+title('The pair correlation function as a function of the distance from an occupied site','Interpreter','latex')
+set(gcf, 'color', 'none');
+set(gca, 'color', 'none');
 exportgraphics(fig_paircorrelation,strcat(true_name,'/pair_correlation.png'));
 
 %% PCA to get asphericity and orientation vector
@@ -362,6 +373,7 @@ for i = 1:numel(voro_vert)/3
     vy(i) = voro_vert(i,2);
     vz(i) = voro_vert(i,3);
 end
+
 %{
 figggg = figure;
 plot3(x_array,y_array,z_array,'r+',vx,vy,vz,'b-');
@@ -373,3 +385,22 @@ zlim([min(z_array), max(z_array)]);
 disp('The mean number of neighbours is');
 disp(2*(numel(voro_vert)/3)/size_arrays);
 
+
+
+
+
+%% test
+
+%{
+test_lists_x = [];
+test_lists_y = [];
+for i=1:size(x_array)
+    if z_array(i)>-1 && z_array(i)<1
+        test_lists_x(end+1) = x_array(i);
+        test_lists_y(end+1) = y_array(i);
+    end
+end
+
+test_fig = figure;
+scatter(test_lists_x,test_lists_y,'x','LineWidth',2)
+%}

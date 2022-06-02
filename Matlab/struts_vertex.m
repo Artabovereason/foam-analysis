@@ -23,8 +23,8 @@
 more off
 clear
 directory='';
-%load([directory,'Nodes_and_Struts_cleaned_15.mat'])
 load([directory,'Nodes_and_Struts_cleaned_15.mat'])
+%load([directory,'Nodes_and_Struts_cleaned.mat'])
 %matfile([directory,'Nodes_and_Struts_cleaned_15.mat']) <- content of mat file.
 
 %%% pretraitement des struts
@@ -67,6 +67,8 @@ an.String={['Average=',num2str(av_st_length)],['Std dev=',num2str(std_st_length)
 an.Position=[0.4929    0.7595    0.2957    0.1296];
 an.FitBoxToText='on';
 drawnow
+exportgraphics(fig_slh,'strut-length-distribution.png');
+
 %%%%%%%%%%%%%%%%%%
 
 
@@ -214,6 +216,7 @@ legend({'$\langle l\rangle (z)$','$\langle l \rangle$'},'Location','southwest','
 xlabel('$z$ position [mm]','Interpreter','Latex');
 
 hold off
+exportgraphics(fig11,'strut-length-fct-z.png');
 
 
 
