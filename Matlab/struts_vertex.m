@@ -23,8 +23,8 @@
 more off
 clear
 directory='';
-load([directory,'Nodes_and_Struts_cleaned_15.mat'])
-%load([directory,'Nodes_and_Struts_cleaned.mat'])
+%load([directory,'Nodes_and_Struts_cleaned_15.mat'])
+load([directory,'Nodes_and_Struts.mat'])
 %matfile([directory,'Nodes_and_Struts_cleaned_15.mat']) <- content of mat file.
 
 %%% pretraitement des struts
@@ -58,7 +58,7 @@ end
 av_st_length=mean(strutlengths);
 std_st_length=std(strutlengths);
 
-fig_slh=figure;
+fig_slh=figure('visible','off');
 histogram(strutlengths/av_st_length,'Normalization','pdf');
 xlabel('$\ell/\langle\ell\rangle$=normalized strut length','Interpreter','latex');
 ylabel('proba($\ell/\langle\ell\rangle$)','Interpreter','latex');
@@ -127,7 +127,7 @@ for j=1:numel(xg_v)
 	end
 end
 %%% visu
-f=figure;
+f=figure('visible','off');
 set(f,'position',[ 23        1616        1000         438]);
 subplot(2,1,1)
 plotyy(zmv,densityv_alongz,zmv,density_anomalousv_alongz);
@@ -152,7 +152,6 @@ for i=1:numel(vertices_COM)
     test_y(i) = vertices_COM{i}(2);
     test_z(i) = vertices_COM{i}(3);
 end
-disp(struts{1}(1));
 
 %{
 fff=figure;
@@ -165,8 +164,8 @@ end
 
 hold off
 %plot3(test_x,test_y,test_z,'x');
-
 %}
+
 
 %% Length of the struts as a function of z
 
@@ -204,21 +203,152 @@ num_bin = num_bin./numel(z_position_struts);
 local_mean_length_strut = local_mean_length_strut.'; % .' is doing the transposition of the matrix same as transpose(A)
 local_std_length_strut  = local_std_length_strut.';
 
-fig11 = figure;%('visible','off');
+fig11 = figure('visible','off');
 error_bar_mean = [] ;
 for l = 1:numel(plot_slice_z)
     error_bar_mean(end+1) = plot_slice_z(1)-bin_slice_z(1);
 end
 hold on
-errorbar(plot_slice_z,local_mean_length_strut,error_bar_mean,'horizontal','.','LineWidth',2)
+errorbar(plot_slice_z,local_mean_length_strut,local_std_length_strut,local_std_length_strut,error_bar_mean,error_bar_mean,'.','LineWidth',2)
 plot([min(plot_slice_z), max(plot_slice_z)],[av_st_length, av_st_length],'LineWidth',2)
 legend({'$\langle l\rangle (z)$','$\langle l \rangle$'},'Location','southwest','Interpreter','Latex');
-xlabel('$z$ position [mm]','Interpreter','Latex');
+xlabel('$z$ position [pixel]','Interpreter','Latex');
 
 hold off
 exportgraphics(fig11,'strut-length-fct-z.png');
 
+%% g(n) topo
+ 
 
+connectivity_order_vertex = zeros(numel(vertices_COM),1);
+for i = 1:numel(vertices_COM)
+    cache_connectivity = 0;
+    for j = 1:numel(struts)
+        if struts{j,1}(1) == i
+            cache_connectivity = cache_connectivity+1;
+        end
+        if struts{j,1}(2) == i
+            cache_connectivity = cache_connectivity+1;
+        end
+    end
+    connectivity_order_vertex(i) = cache_connectivity;
+end
+disp('The mean order of vertex is :');
+disp(mean(connectivity_order_vertex));
+
+
+
+
+max_n_order     = 6;
+topological_g_r = zeros(max_n_order,1);
+% for n=1, the first value of g(r) is the order of the vertex
+%topological_g_r(end+1)=1;%connectivity_order_vertex(index_start);
+up_to = 1000;
+for k = 1:up_to
+    index_start = k;
+    index =index_start;
+    first_vertex_start = vertices_COM{index_start,1};
+    already_tagged_vertex = {};
+    already_tagged_vertex{end+1} = index_start;
+    n_connection0_0 = [];
+    n_connection0_0 = [n_connection0_0,index];
+    n_connection1 = find([struts{:}] == index);
+    already_done_connection = [];
+    already_done_connection = [already_done_connection,index];
+    
+    n_connection1_1 = [];
+    for i = 1:numel(n_connection1)
+        %disp(struts{fix(n_connection1(i)/2) +rem(n_connection1(i),2)}( rem(n_connection1(i),2)+1 ));
+        already_done_connection(end+1) = struts{fix(n_connection1(i)/2) +rem(n_connection1(i),2)}( rem(n_connection1(i),2)+1 );
+        n_connection1_1(end+1)         = struts{fix(n_connection1(i)/2) +rem(n_connection1(i),2)}( rem(n_connection1(i),2)+1 );
+    end
+    n_connection1_1 = unique(n_connection1_1);
+    topological_g_r(1)=topological_g_r(1)+numel(n_connection1_1);%numel(already_done_connection)-topological_g_r(end);
+    
+    
+    n_connection2_2 = [];
+    for i = 1:numel(n_connection1_1)
+        n_connection2 = find([struts{:}] == n_connection1_1(i));
+        for i = 1:numel(n_connection2)
+            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
+            already_done_connection(end+1) = struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 );
+            n_connection2_2(end+1)         = struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 );
+        end
+    end
+    n_connection2_2         = unique(n_connection2_2);
+    n_connection2_2         = setdiff(n_connection2_2,[n_connection0_0,n_connection1_1]);
+    already_done_connection = unique(already_done_connection);
+    topological_g_r(2)  = topological_g_r(2)+numel(n_connection2_2);%numel(already_done_connection)-topological_g_r(end);
+    %disp(unique(already_done_connection))
+    
+    n_connection3_3 = [];
+    for i = 1:numel(n_connection2_2)
+        n_connection3 = find([struts{:}] == n_connection2_2(i));
+        for i = 1:numel(n_connection3)
+            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
+            already_done_connection(end+1) = struts{fix(n_connection3(i)/2) +rem(n_connection3(i),2)}( rem(n_connection3(i),2)+1 );
+            n_connection3_3(end+1)         = struts{fix(n_connection3(i)/2) +rem(n_connection3(i),2)}( rem(n_connection3(i),2)+1 );
+        end
+    end
+    n_connection3_3         = unique(n_connection3_3);
+    n_connection3_3         = setdiff(n_connection3_3,[n_connection0_0,n_connection1_1,n_connection2_2]);
+    already_done_connection = unique(already_done_connection);
+    topological_g_r(3)  =topological_g_r(3) + numel(n_connection3_3);%numel(already_done_connection)-topological_g_r(end);
+    
+    n_connection4_4 = [];
+    for i = 1:numel(n_connection3_3)
+        n_connection4 = find([struts{:}] == n_connection3_3(i));
+        for i = 1:numel(n_connection4)
+            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
+            already_done_connection(end+1) = struts{fix(n_connection4(i)/2) +rem(n_connection4(i),2)}( rem(n_connection4(i),2)+1 );
+            n_connection4_4(end+1)         = struts{fix(n_connection4(i)/2) +rem(n_connection4(i),2)}( rem(n_connection4(i),2)+1 );
+        end
+    end
+    n_connection4_4         = unique(n_connection4_4);
+    n_connection4_4         = setdiff(n_connection4_4,[n_connection0_0,n_connection1_1,n_connection2_2,n_connection3_3]);
+    already_done_connection = unique(already_done_connection);
+    topological_g_r(4)  =topological_g_r(4)+ numel(n_connection4_4);%numel(already_done_connection)-topological_g_r(end);
+    
+    n_connection5_5 = [];
+    for i = 1:numel(n_connection4_4)
+        n_connection5 = find([struts{:}] == n_connection4_4(i));
+        for i = 1:numel(n_connection5)
+            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
+            already_done_connection(end+1) = struts{fix(n_connection5(i)/2) +rem(n_connection5(i),2)}( rem(n_connection5(i),2)+1 );
+            n_connection5_5(end+1)         = struts{fix(n_connection5(i)/2) +rem(n_connection5(i),2)}( rem(n_connection5(i),2)+1 );
+        end
+    end
+    n_connection5_5         = unique(n_connection5_5);
+    n_connection5_5         = setdiff(n_connection5_5,[n_connection0_0,n_connection1_1,n_connection2_2,n_connection3_3,n_connection4_4]);
+    already_done_connection = unique(already_done_connection);
+    topological_g_r(5)  = topological_g_r(5)+numel(n_connection5_5);%numel(already_done_connection)-topological_g_r(end);
+
+    n_connection6_6 = [];
+    for i = 1:numel(n_connection5_5)
+        n_connection6 = find([struts{:}] == n_connection5_5(i));
+        for i = 1:numel(n_connection6)
+            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
+            already_done_connection(end+1) = struts{fix(n_connection6(i)/2) +rem(n_connection6(i),2)}( rem(n_connection6(i),2)+1 );
+            n_connection6_6(end+1)         = struts{fix(n_connection6(i)/2) +rem(n_connection6(i),2)}( rem(n_connection6(i),2)+1 );
+        end
+    end
+    n_connection6_6         = unique(n_connection6_6);
+    n_connection6_6         = setdiff(n_connection6_6,[n_connection0_0,n_connection1_1,n_connection2_2,n_connection3_3,n_connection4_4,n_connection5_5]);
+    already_done_connection = unique(already_done_connection);
+    topological_g_r(6)  = topological_g_r(6)+numel(n_connection6_6);%numel(already_done_connection)-topological_g_r(end);
+end
+
+for i = 1:numel(topological_g_r)
+    topological_g_r(i) = (1/up_to)* topological_g_r(i)/(i^2);
+end
+
+topological_g_r_fig=figure('visible','off');
+plot(1:numel(topological_g_r),topological_g_r,'x-','LineWidth',2);
+xlabel('number of step $n$','Interpreter','Latex');
+ylabel('number of unique vertex','Interpreter','Latex');
+ylim([0,mean(connectivity_order_vertex)]);
+title('Topological $g(n)$','Interpreter','Latex');
+exportgraphics(topological_g_r_fig,'topological_g_r.png');
 
 
 
