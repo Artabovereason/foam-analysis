@@ -229,7 +229,7 @@ exportgraphics(fig11,strcat(true_name,'/strut-length-fct-z.png'));
 
 %% g(n) topo
  
-
+list_pertinent_index_vertices = [];
 connectivity_order_vertex = zeros(numel(vertices_COM),1);
 for i = 1:numel(vertices_COM)
     cache_connectivity = 0;
@@ -241,19 +241,50 @@ for i = 1:numel(vertices_COM)
             cache_connectivity = cache_connectivity+1;
         end
     end
+    if cache_connectivity ~= 0
+        list_pertinent_index_vertices(end+1) = i;
+    end
     connectivity_order_vertex(i) = cache_connectivity;
 end
-disp('The mean order of vertex is :');
+disp('The mean order of vertex before cleaning is :');
 disp(mean(connectivity_order_vertex));
 
+connectivity_order_vertex_fixed = zeros(numel(list_pertinent_index_vertices),1);
+for i = 1:numel(list_pertinent_index_vertices)
+    cache_connectivity = 0;
+    for j = 1:numel(struts)
+        if struts{j,1}(1) == list_pertinent_index_vertices(i)
+            cache_connectivity = cache_connectivity+1;
+        end
+        if struts{j,1}(2) == list_pertinent_index_vertices(i)
+            cache_connectivity = cache_connectivity+1;
+        end
+    end
+    connectivity_order_vertex_fixed(i) = cache_connectivity;
+end
+disp('The mean order of vertex after cleaning is :');
+disp(mean(connectivity_order_vertex_fixed));
+
+%disp(numel(list_pertinent_index_vertices));
+%%
+histogram_order_vertex = figure('Visible','off');
+histogram(connectivity_order_vertex);
+exportgraphics(histogram_order_vertex,strcat(true_name,'/histogram_order_vertex.png'));
+
+histogram_order_vertex2 = figure('Visible','off');
+histogram(connectivity_order_vertex_fixed);
+exportgraphics(histogram_order_vertex2,strcat(true_name,'/histogram_order_vertex_fixed.png'));
+
+%%
+%{
 max_n_order     = 6;
 topological_g_r = zeros(max_n_order,1);
 setdif_contact = [];
 % for n=1, the first value of g(r) is the order of the vertex
 %topological_g_r(end+1)=1;%connectivity_order_vertex(index_start);
-up_to = 1000;
+up_to = numel(list_pertinent_index_vertices);
 for k = 1:up_to
-    index_start = k;
+    index_start = list_pertinent_index_vertices(k);
     index =index_start;
     first_vertex_start = vertices_COM{index_start,1};
     already_tagged_vertex = {};
@@ -355,9 +386,11 @@ topological_g_r_fig=figure('visible','off');
 plot(1:numel(topological_g_r),topological_g_r,'x-','LineWidth',2);
 xlabel('number of step $n$','Interpreter','Latex');
 ylabel('number of unique vertex','Interpreter','Latex');
-ylim([0,mean(connectivity_order_vertex)]);
+ylim([0,mean(connectivity_order_vertex_fixed)]);
 title('Topological $g(n)$','Interpreter','Latex');
 exportgraphics(topological_g_r_fig,strcat(true_name,'/topological_g_r.png'));
+%}
+
 
 %{
 %% Struct
