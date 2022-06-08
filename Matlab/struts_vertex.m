@@ -22,9 +22,18 @@
 %%%%%%%%%%%
 more off
 clear
+
+[f, p]     = uigetfile('*.mat');
+eval(sprintf('cd %s',p));
+true_name  = regexprep(f,'.mat','','ignorecase');
+mkdir(true_name);
+filename   = [p f];
+fileID     = fopen(filename,'r');
+
 directory='';
 %load([directory,'Nodes_and_Struts_cleaned_15.mat'])
-load([directory,'Nodes_and_Struts.mat'])
+%load([directory,'Nodes_and_Struts.mat'])
+load(f)
 %matfile([directory,'Nodes_and_Struts_cleaned_15.mat']) <- content of mat file.
 
 %%% pretraitement des struts
@@ -67,7 +76,7 @@ an.String={['Average=',num2str(av_st_length)],['Std dev=',num2str(std_st_length)
 an.Position=[0.4929    0.7595    0.2957    0.1296];
 an.FitBoxToText='on';
 drawnow
-exportgraphics(fig_slh,'strut-length-distribution.png');
+exportgraphics(fig_slh,strcat(true_name,'/strut-length-distribution.png'));
 
 %%%%%%%%%%%%%%%%%%
 
@@ -127,8 +136,8 @@ for j=1:numel(xg_v)
 	end
 end
 %%% visu
-f=figure('visible','off');
-set(f,'position',[ 23        1616        1000         438]);
+fig_order_vrtx=figure('visible','off');
+set(fig_order_vrtx,'position',[ 23        1616        1000         438]);
 subplot(2,1,1)
 plotyy(zmv,densityv_alongz,zmv,density_anomalousv_alongz);
 title('raw counting of order 4 and order <>4 vertices');
@@ -137,6 +146,7 @@ subplot(2,1,2)
 plotyy(zmv,density109_alongz(:,1)./max(1,densityv_alongz)/les109degres,zmv,density109_alongz(:,2)./max(1,densityv_alongz))
 title('local mean dihedral angle and standard deviation')
 xlabel('z');
+exportgraphics(fig_order_vrtx,strcat(true_name,'/order_vertex.png'));
 
 %% The 3D plot of the struts
 
@@ -215,7 +225,7 @@ legend({'$\langle l\rangle (z)$','$\langle l \rangle$'},'Location','southwest','
 xlabel('$z$ position [pixel]','Interpreter','Latex');
 
 hold off
-exportgraphics(fig11,'strut-length-fct-z.png');
+exportgraphics(fig11,strcat(true_name,'/strut-length-fct-z.png'));
 
 %% g(n) topo
  
@@ -236,11 +246,9 @@ end
 disp('The mean order of vertex is :');
 disp(mean(connectivity_order_vertex));
 
-
-
-
 max_n_order     = 6;
 topological_g_r = zeros(max_n_order,1);
+setdif_contact = [];
 % for n=1, the first value of g(r) is the order of the vertex
 %topological_g_r(end+1)=1;%connectivity_order_vertex(index_start);
 up_to = 1000;
@@ -256,21 +264,21 @@ for k = 1:up_to
     already_done_connection = [];
     already_done_connection = [already_done_connection,index];
     
+    %%%
     n_connection1_1 = [];
     for i = 1:numel(n_connection1)
-        %disp(struts{fix(n_connection1(i)/2) +rem(n_connection1(i),2)}( rem(n_connection1(i),2)+1 ));
         already_done_connection(end+1) = struts{fix(n_connection1(i)/2) +rem(n_connection1(i),2)}( rem(n_connection1(i),2)+1 );
         n_connection1_1(end+1)         = struts{fix(n_connection1(i)/2) +rem(n_connection1(i),2)}( rem(n_connection1(i),2)+1 );
     end
     n_connection1_1 = unique(n_connection1_1);
-    topological_g_r(1)=topological_g_r(1)+numel(n_connection1_1);%numel(already_done_connection)-topological_g_r(end);
+    topological_g_r(1)=topological_g_r(1)+numel(n_connection1_1); 
+    setdif_contact = [setdif_contact,n_connection1_1];
     
-    
+    %%%
     n_connection2_2 = [];
     for i = 1:numel(n_connection1_1)
         n_connection2 = find([struts{:}] == n_connection1_1(i));
         for i = 1:numel(n_connection2)
-            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
             already_done_connection(end+1) = struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 );
             n_connection2_2(end+1)         = struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 );
         end
@@ -278,14 +286,13 @@ for k = 1:up_to
     n_connection2_2         = unique(n_connection2_2);
     n_connection2_2         = setdiff(n_connection2_2,[n_connection0_0,n_connection1_1]);
     already_done_connection = unique(already_done_connection);
-    topological_g_r(2)  = topological_g_r(2)+numel(n_connection2_2);%numel(already_done_connection)-topological_g_r(end);
-    %disp(unique(already_done_connection))
+    topological_g_r(2)  = topological_g_r(2)+numel(n_connection2_2);
     
+    %%%
     n_connection3_3 = [];
     for i = 1:numel(n_connection2_2)
         n_connection3 = find([struts{:}] == n_connection2_2(i));
         for i = 1:numel(n_connection3)
-            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
             already_done_connection(end+1) = struts{fix(n_connection3(i)/2) +rem(n_connection3(i),2)}( rem(n_connection3(i),2)+1 );
             n_connection3_3(end+1)         = struts{fix(n_connection3(i)/2) +rem(n_connection3(i),2)}( rem(n_connection3(i),2)+1 );
         end
@@ -293,13 +300,13 @@ for k = 1:up_to
     n_connection3_3         = unique(n_connection3_3);
     n_connection3_3         = setdiff(n_connection3_3,[n_connection0_0,n_connection1_1,n_connection2_2]);
     already_done_connection = unique(already_done_connection);
-    topological_g_r(3)  =topological_g_r(3) + numel(n_connection3_3);%numel(already_done_connection)-topological_g_r(end);
-    
+    topological_g_r(3)  =topological_g_r(3) + numel(n_connection3_3);
+
+    %%%
     n_connection4_4 = [];
     for i = 1:numel(n_connection3_3)
         n_connection4 = find([struts{:}] == n_connection3_3(i));
         for i = 1:numel(n_connection4)
-            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
             already_done_connection(end+1) = struts{fix(n_connection4(i)/2) +rem(n_connection4(i),2)}( rem(n_connection4(i),2)+1 );
             n_connection4_4(end+1)         = struts{fix(n_connection4(i)/2) +rem(n_connection4(i),2)}( rem(n_connection4(i),2)+1 );
         end
@@ -307,13 +314,13 @@ for k = 1:up_to
     n_connection4_4         = unique(n_connection4_4);
     n_connection4_4         = setdiff(n_connection4_4,[n_connection0_0,n_connection1_1,n_connection2_2,n_connection3_3]);
     already_done_connection = unique(already_done_connection);
-    topological_g_r(4)  =topological_g_r(4)+ numel(n_connection4_4);%numel(already_done_connection)-topological_g_r(end);
-    
+    topological_g_r(4)  =topological_g_r(4)+ numel(n_connection4_4);
+
+    %%%
     n_connection5_5 = [];
     for i = 1:numel(n_connection4_4)
         n_connection5 = find([struts{:}] == n_connection4_4(i));
         for i = 1:numel(n_connection5)
-            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
             already_done_connection(end+1) = struts{fix(n_connection5(i)/2) +rem(n_connection5(i),2)}( rem(n_connection5(i),2)+1 );
             n_connection5_5(end+1)         = struts{fix(n_connection5(i)/2) +rem(n_connection5(i),2)}( rem(n_connection5(i),2)+1 );
         end
@@ -321,13 +328,13 @@ for k = 1:up_to
     n_connection5_5         = unique(n_connection5_5);
     n_connection5_5         = setdiff(n_connection5_5,[n_connection0_0,n_connection1_1,n_connection2_2,n_connection3_3,n_connection4_4]);
     already_done_connection = unique(already_done_connection);
-    topological_g_r(5)  = topological_g_r(5)+numel(n_connection5_5);%numel(already_done_connection)-topological_g_r(end);
+    topological_g_r(5)  = topological_g_r(5)+numel(n_connection5_5);
 
+    %%%
     n_connection6_6 = [];
     for i = 1:numel(n_connection5_5)
         n_connection6 = find([struts{:}] == n_connection5_5(i));
         for i = 1:numel(n_connection6)
-            %disp(struts{fix(n_connection2(i)/2) +rem(n_connection2(i),2)}( rem(n_connection2(i),2)+1 ));
             already_done_connection(end+1) = struts{fix(n_connection6(i)/2) +rem(n_connection6(i),2)}( rem(n_connection6(i),2)+1 );
             n_connection6_6(end+1)         = struts{fix(n_connection6(i)/2) +rem(n_connection6(i),2)}( rem(n_connection6(i),2)+1 );
         end
@@ -335,7 +342,9 @@ for k = 1:up_to
     n_connection6_6         = unique(n_connection6_6);
     n_connection6_6         = setdiff(n_connection6_6,[n_connection0_0,n_connection1_1,n_connection2_2,n_connection3_3,n_connection4_4,n_connection5_5]);
     already_done_connection = unique(already_done_connection);
-    topological_g_r(6)  = topological_g_r(6)+numel(n_connection6_6);%numel(already_done_connection)-topological_g_r(end);
+    topological_g_r(6)  = topological_g_r(6)+numel(n_connection6_6); 
+
+    %%%
 end
 
 for i = 1:numel(topological_g_r)
@@ -348,7 +357,26 @@ xlabel('number of step $n$','Interpreter','Latex');
 ylabel('number of unique vertex','Interpreter','Latex');
 ylim([0,mean(connectivity_order_vertex)]);
 title('Topological $g(n)$','Interpreter','Latex');
-exportgraphics(topological_g_r_fig,'topological_g_r.png');
+exportgraphics(topological_g_r_fig,strcat(true_name,'/topological_g_r.png'));
 
+%{
+%% Struct
+for idx = 1:10
+    myStruct.("NameOfVariable" + idx) = rand(5);
+end
+myStruct
 
+%% Table
+
+for idx = 1:10
+    t = table(rand(5,1));
+    t.Properties.VariableNames = "NameOfVariable" + idx;
+    if idx == 1
+        tt = t;
+    else
+        tt = [tt t];
+    end
+end
+tt
+%}
 
