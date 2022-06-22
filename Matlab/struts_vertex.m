@@ -45,8 +45,23 @@ strutsmat_unfolded=[strutsmat(:,1);strutsmat(:,2)];
 vertices_alive=unique(strutsmat_unfolded);
 n_vertices=numel(vertices_alive);
 disp(['nombre de vertex=',num2str(n_vertices)])
+ 
 
+
+%% For SlicesRight
+
+for j = 1:numel(vertices_COM)
+    cache = [vertices_COM{j,1}(1),vertices_COM{j,1}(2),vertices_COM{j,1}(3)];
+    vertices_COM{j,1}(1) = cache(3);
+    vertices_COM{j,1}(2) = cache(1);
+    vertices_COM{j,1}(3) = cache(2);
+end
+
+%%
 verticesraw=cell2mat(vertices_COM);
+disp(max(verticesraw(:,1)));
+disp(max(verticesraw(:,2)));
+disp(max(verticesraw(:,3)));
 xg_v=verticesraw(vertices_alive,1);
 yg_v=verticesraw(vertices_alive,2);
 zg_v=verticesraw(vertices_alive,3);
@@ -176,7 +191,10 @@ subplot(2,1,1)
 hold on
 plot(zmv,densityv_alongz,'x-','LineWidth',2);  
 plot(zmv,density_anomalousv_alongz,'x-','LineWidth',2); 
-legend({'Vertex of order $=4$','Vertex of order $\neq 4$'},'Interpreter','Latex');
+hold on
+errorbar([197.7812,279.5963,369.6744,465.5747,576.5098], [0,0,0,0,0],[18.4692,18.4692,18.4692,18.4692,18.4692],'horizontal','x','LineWidth',2);
+hold off
+legend({'Vertex of order $=4$','Vertex of order $\neq 4$','Fiber presence'},'Interpreter','Latex');
 
 hold off 
 title('Counting of order $=4$ and order $\neq 4$ vertices','Interpreter','Latex');
@@ -192,12 +210,18 @@ plot([min(zmv),max(zmv)], [90/les109degres, 90/les109degres])
 plot([min(zmv),max(zmv)], [mean((density109_alongz(:,1)./max(1,densityv_alongz))/les109degres ), mean((density109_alongz(:,1)./max(1,densityv_alongz))/les109degres )])
 plot([min(zmv),max(zmv)], [mean(density109_anomalousv_alongz(:,1)./max(1,density_anomalousv_alongz)/les109degres), mean(density109_anomalousv_alongz(:,1)./max(1,density_anomalousv_alongz)/les109degres)])
 hold off
-legend({'Vertex of order $=4$','Vertex of order $\neq 4$','$90/109.5$','$\langle$ order $=4\rangle$','$\langle$ order $\neq 4\rangle$'},'Interpreter','Latex');
+
 ylim([0,2])
 title('Local mean dihedral angle distribution','Interpreter','Latex')
 xlabel('$z$ position','Interpreter','Latex');
-exportgraphics(fig_order_vrtx,strcat(true_name,'/order_vertex.png'));
+hold on
+errorbar([197.7812,279.5963,369.6744,465.5747,576.5098], [0,0,0,0,0],[18.4692,18.4692,18.4692,18.4692,18.4692],'horizontal','x','LineWidth',2);
+hold off
+legend({'Vertex of order $=4$','Vertex of order $\neq 4$','$90/109.5$','$\langle$ order $=4\rangle$','$\langle$ order $\neq 4\rangle$','Fiber presence'},'Interpreter','Latex');
 
+exportgraphics(fig_order_vrtx,strcat(true_name,'/order_vertex.png'));
+disp('The total number of vertex on this plot is :');
+disp(sum(densityv_alongz)+sum(density_anomalousv_alongz));
 disp('The mean angle for vertex of order different from 4 is :');
 disp(mean(density109_anomalousv_alongz(:,1)./max(1,density_anomalousv_alongz)/les109degres));
 %%
