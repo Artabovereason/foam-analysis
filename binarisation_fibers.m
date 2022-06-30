@@ -19,24 +19,27 @@ err_ord    = {zeros};
 chemin        = fullfile(rep, '*.tif');
 list          = dir(chemin); 
 save_all_data = {};
-    
-for w = 170:1480%numel(list)
+
+image = fullfile(rep, list(1).name);
+I     = imread(image);       %Original image
+gs    = rgb2gray(I);         %Shading of grey
+I_BW  = imbinarize(gs,0.35); %Binarization
+imshow(I_BW);
+points_g = ginputWhite(2); %Using the command 'ginputWhite' to define a ROI
+x1       = floor(points_g(2,1));
+x2       = floor(points_g(1,1));
+y1       = floor(points_g(1,2));
+y2       = floor(points_g(2,2)); 
+
+for w = 1:numel(list)
     count=count+1;
     %% RESIZE TOMOGRAPH IMAGES
     image = fullfile(rep, list(w).name);
     I     = imread(image);       %Original image
     gs    = rgb2gray(I);         %Shading of grey
-    I_BW  = imbinarize(gs,0.35); %Binarization
-     
-    %imshow(I_BW);
-    %disp(size(I_BW));
-    %[xi,yi] = ginputWhite(2); %Using the command 'ginputWhite' to define a ROI
-    %[xi,yi] = ginputWhite(2); %Using the command 'ginputWhite' to define a ROI
-    x1 = 0;
-    y1 = 0;
-    x2 = max(size(I_BW));
-    y2 = min(size(I_BW));
-    
+    BW    = imbinarize(gs,0.35); %Binarization
+    I_BW  = BW(y1:y2,x1:x2); 
+    %{
     for i = 1:min(size(I_BW))
         for j = 1:max(size(I_BW))
             if i < 20 
@@ -55,6 +58,7 @@ for w = 170:1480%numel(list)
 
         end
     end
+    %}
     cache = {};
     for i = 1:min(size(I_BW))
         for j = 1:max(size(I_BW))
