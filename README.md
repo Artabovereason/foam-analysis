@@ -5,7 +5,7 @@ The present scripts were developped during my summer internship at Institut Char
 
 
 ## Usage
-* The script `FoamAnalysisFromCSV.m` require a `.csv` file that comes from the *Foam Analysis* software. Simply run the script, you are then asked to select a `.csv` file and in a newly created folder where the `.csv` file is, the output figures will be into.
+* The script `FoamAnalysisFromCSV.m` require a `.csv` file that comes from the *Foam Analysis* software, the columns delimiter should be `;`, the comma for non-integers `.`. Simply run the script, you are then asked to select a `.csv` file and in a newly created folder where the `.csv` file is, the output figures will be into.
 
 * The script `read_scale.m` require a `.tif` tomography picture with a visible scale. Simply make a two-point selection of the scale bar, where the first selection is the upper-right and the second selection is the bottom-left. You are then asked to input the written size of the scale (in mm). The corresponding resolution of the picture (in mm per pixel) is displayed in the terminal.
 
